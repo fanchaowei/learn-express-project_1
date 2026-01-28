@@ -15,6 +15,8 @@ import {
   updateUser,
   deleteUser,
   batchCreateUsers,
+  getUserStats,
+  getUsersByPage,
 } from '../controllers/userController';
 
 /**
@@ -49,6 +51,22 @@ const router = Router();
  * - DELETE → DELETE
  */
 
+/**
+ * 【重要】路由顺序很重要！
+ * - 更具体的路由应该放在前面
+ * - 例如：/stats 和 /batch 应该在 /:id 之前
+ * - 否则 /stats 会被 /:id 匹配（id = "stats"）
+ */
+
+// GET /api/users/stats - 获取用户统计信息（新增）
+router.get('/stats', getUserStats);
+
+// GET /api/users/page - 分页获取用户（新增）
+router.get('/page', getUsersByPage);
+
+// POST /api/users/batch - 批量创建用户（事务示例）
+router.post('/batch', batchCreateUsers);
+
 // GET /api/users - 获取所有用户
 router.get('/', getAllUsers);
 
@@ -65,14 +83,28 @@ router.put('/:id', updateUser);
 // DELETE /api/users/:id - 删除用户
 router.delete('/:id', deleteUser);
 
-// POST /api/users/batch - 批量创建用户（事务示例）
-router.post('/batch', batchCreateUsers);
-
 /**
- * 【学习要点】路由顺序很重要！
- * - 更具体的路由应该放在前面
- * - 例如：/batch 应该在 /:id 之前
- * - 否则 /batch 会被 /:id 匹配（id = "batch"）
+ * 【3层架构的完整流程】
+ *
+ * 用户请求: GET /api/users/1
+ *   ↓
+ * 路由匹配: router.get('/:id', getUserById)
+ *   ↓
+ * Controller: 提取参数 id=1，调用 userService.getUserById(1)
+ *   ↓
+ * Service: 验证参数，调用 userDAO.findById(1)
+ *   ↓
+ * DAO: 执行 SQL: SELECT * FROM users WHERE id = $1
+ *   ↓
+ * Database: 返回用户数据
+ *   ↓
+ * DAO: 返回 User 对象
+ *   ↓
+ * Service: 返回 User 对象（可以添加业务逻辑处理）
+ *   ↓
+ * Controller: 包装为 HTTP 响应 { success: true, data: user }
+ *   ↓
+ * 用户收到响应
  */
 
 export default router;
