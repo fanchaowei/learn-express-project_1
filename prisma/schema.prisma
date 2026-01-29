@@ -1,0 +1,101 @@
+/**
+ * Prisma Schema 文件
+ *
+ * 【递归学习提示】如果你不理解某个概念，可以追问：
+ * - "什么是 Prisma Schema？"
+ * - "model 和数据库表的关系是什么？"
+ * - "@map 和 @@map 有什么区别？"
+ * - "为什么要用 camelCase 而不是 snake_case？"
+ */
+
+// 【核心概念】Generator - 生成 Prisma Client
+// - provider: 使用 prisma-client-js 生成 JavaScript/TypeScript 客户端
+// - output: 生成的代码位置（默认在 node_modules，这里自定义到 src/generated）
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+// 【核心概念】Datasource - 数据源配置
+// - provider: 数据库类型（postgresql, mysql, sqlite, sqlserver, mongodb）
+// - 注意：Prisma 7+ 版本中，url 配置移到了 prisma.config.ts
+datasource db {
+  provider = "postgresql"
+}
+
+/**
+ * 【核心概念】Model - 数据模型
+ * - 对应数据库中的表
+ * - 使用 camelCase 命名（Prisma 推荐）
+ * - 使用 @map 映射到数据库的 snake_case 列名
+ * - 使用 @@map 映射到数据库的表名
+ *
+ * 【对比原生 SQL】
+ * - 原生 SQL: 手动写 CREATE TABLE 语句
+ * - Prisma: 定义 model，自动生成迁移脚本
+ *
+ * 【对比 ASP.NET】
+ * - 类似于 Entity Framework 的 Entity 类
+ * - 但 Prisma Schema 是声明式的，不是 C# 类
+ */
+model User {
+  // 【字段类型】
+  // - Int: 整数（对应 PostgreSQL 的 INTEGER）
+  // - String: 字符串（对应 VARCHAR）
+  // - DateTime: 日期时间（对应 TIMESTAMP）
+
+  // 【字段修饰符】
+  // - @id: 主键
+  // - @default(autoincrement()): 自增（对应 SERIAL）
+  // - @unique: 唯一约束
+  // - @default(now()): 默认当前时间
+  // - @updatedAt: 自动更新时间
+  // - @map("列名"): 映射到数据库列名
+  // - @db.VarChar(长度): 指定数据库类型
+
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  email     String   @unique @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 【索引】
+  // - @@index: 创建索引
+  // - 对应原生 SQL: CREATE INDEX idx_users_email ON users(email)
+  @@index([email])
+  @@index([createdAt])
+
+  // 【表名映射】
+  // - @@map("users"): 映射到数据库表名
+  // - Prisma 中使用 User（单数），数据库中使用 users（复数）
+  @@map("users")
+}
+
+/**
+ * 【学习要点】Prisma Schema 的优势
+ *
+ * 1. **类型安全**：自动生成 TypeScript 类型
+ * 2. **声明式**：描述"是什么"，而非"怎么做"
+ * 3. **迁移管理**：自动生成数据库迁移脚本
+ * 4. **关系定义**：轻松定义表之间的关系（未来学习）
+ * 5. **跨数据库**：同一个 schema 可以用于不同数据库
+ *
+ * 【对比原生 SQL】
+ *
+ * 原生 SQL 创建表：
+ * ```sql
+ * CREATE TABLE users (
+ *   id SERIAL PRIMARY KEY,
+ *   name VARCHAR(100) NOT NULL,
+ *   email VARCHAR(255) NOT NULL UNIQUE,
+ *   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ *   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+ * );
+ * CREATE INDEX idx_users_email ON users(email);
+ * ```
+ *
+ * Prisma Schema：
+ * - 更简洁，更易读
+ * - 自动生成 TypeScript 类型
+ * - 自动处理迁移
+ */
